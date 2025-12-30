@@ -80,5 +80,12 @@ model StarMark {
   @@unique([userId,PlaygroundId])
 }
 
+model TemplateFile {
+  id String @id @default(cuid()) @map("_id")
+  
+}
+
+
+
 
 
