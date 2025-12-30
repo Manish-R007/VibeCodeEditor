@@ -24,7 +24,7 @@ export const toogleStarMarked = async (playgroundId:string,isChecked: boolean) =
             }else{
                 await db.starMark.delete({
                     where:{
-                        data: {
+                        userId_PlaygroundId:{
                             userId:userId,
                             PlaygroundId:playgroundId
                         }
