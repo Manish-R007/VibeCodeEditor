@@ -22,12 +22,10 @@ export const toogleStarMarked = async (playgroundId:string,isChecked: boolean) =
                     }
                 })
             }else{
-                await db.starMark.delete({
+                await db.starMark.deleteMany({
                     where:{
-                        data: {
-                            userId:userId,
-                            PlaygroundId:playgroundId
-                        }
+                        userId:userId,
+                        PlaygroundId:playgroundId
                     }
                 })
             }
@@ -88,6 +86,9 @@ export const createPlayground = async (data:{
            }
 
         })
+        revalidatePath('/dashboard')
+        return playground
+        
        
     } catch (error) {
         console.error(error)

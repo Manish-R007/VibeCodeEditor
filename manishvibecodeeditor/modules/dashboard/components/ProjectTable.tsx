@@ -102,16 +102,16 @@ export default function ProjectTable({
   }
 
   const handleMarkasFavorite = async (project: Project) => {
-    // if(!selectedProject || !onMarkasFavorite) return
-    // setIsLoading(true)
-    // try {
-    //   await onMarkasFavorite(selectedProject.id)
-    //   toast.success("Project marked as favorite")
-    // } catch (error) {
-    //   toast.error("Failed to mark project as favorite")
-    // } finally {
-    //   setIsLoading(false)
-    // }
+    if(!selectedProject || !onMarkasFavorite) return
+    setIsLoading(true)
+    try {
+      await onMarkasFavorite(selectedProject.id)
+      toast.success("Project marked as favorite")
+    } catch (error) {
+      toast.error("Failed to mark project as favorite")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleDeleteProject = async () => {
