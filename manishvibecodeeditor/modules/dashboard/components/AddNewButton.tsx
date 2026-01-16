@@ -11,7 +11,7 @@ import { createPlayground } from "../actions";
 
 const AddNewButton = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTemplate,setSelectedTemplate] = useState<{
+  const [selectedTemplate, setSelectedTemplate] = useState<{
     title: string;
     template: "REACT" | "NEXTJS" | "ANGULAR" | "VUE" | "HONO" | "EXPRESS";
     description?: string;
@@ -20,7 +20,7 @@ const AddNewButton = () => {
   const router = useRouter()
 
   const handleSubmit = async (data: {
-     title: string;
+    title: string;
     template: "REACT" | "NEXTJS" | "ANGULAR" | "VUE" | "HONO" | "EXPRESS";
     description?: string;
   }) => {
@@ -29,7 +29,7 @@ const AddNewButton = () => {
     toast.success("Playground Created Successfully")
     setIsModalOpen(false)
     console.log("Created Playground", res?.title, res?.id);
-    
+
     router.push(`/playground/${res?.id}`)
   }
 
@@ -69,11 +69,11 @@ const AddNewButton = () => {
           </div>
         </div>
       </div>
-      
+
       <TemplateSelectingModal
-      isOpen={isModalOpen}
-      onClose={() => setIsModalOpen(false)}
-      onSubmit={handleSubmit}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleSubmit}
       />
     </>
   )

@@ -22,6 +22,7 @@ model User {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  chatMessage ChatMessage[]
 
   @@map("users")
 }
@@ -81,15 +82,30 @@ model StarMark {
   @@unique([userId,PlaygroundId])
 }
 
-model TemplateFile{
+
+
+model TemplateFile {
   id String @id @default(cuid()) @map("_id")
   content Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   PlaygroundId String @unique
-
-  playground Playground @relation(fields: [PlaygroundId],references:[id],onDelete:Cascade)
+  Playground Playground @relation(fields: [PlaygroundId] , references: [id] , onDelete:Cascade)
 }
+
+model ChatMessage {
+  id String @id @default(cuid()) @map("_id")
+  userId String
+  role  String
+  content String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId] , references: [id] , onDelete:Cascade)
+  @@index([userId])
+}
+
+
 
 
 

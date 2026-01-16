@@ -180,6 +180,10 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
         }
     },
 
+    closeAllFiles() {
+        set({openFiles: [], activeFileId: '', editorContent: ''})
+    },
+
     handleAddFolder: async (newFolder, parentPath, instance, saveTemplateData) => {
         const { templateData } = get();
         if (!templateData) return;
