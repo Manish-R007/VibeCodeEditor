@@ -120,3 +120,18 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Add to globals.css */
+.monaco-editor .view-overlays .cdr.injected-text {
+  color: #6b7280 !important;
+  opacity: 0.9 !important;
+  font-style: italic !important;
+  background: rgba(59, 130, 246, 0.2) !important;
+  padding: 0 4px !important;
+  border-radius: 3px !important;
+  border-left: 2px solid #3b82f6 !important;
+}
+
+.monaco-editor .view-overlays .cdr {
+  z-index: 100 !important;
+}
