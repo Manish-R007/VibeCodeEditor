@@ -1,96 +1,138 @@
-import { hi } from "date-fns/locale";
-import {type NextRequest,NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
-interface ChatMessage{
-    role: "user" | "Assistant";
-    content: string;
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
 }
 
-interface chatRequest {
-    message: string
-    history:ChatMessage[]
+interface ChatRequest {
+  message: string;
+  history: ChatMessage[];
+  model: string;
 }
 
-async function generateAiresponse(messages:ChatMessage[]):Promise<String>{
-    const systemPrompt = `
-    You are a helpful assistant.You help the developers With:
-    1. Debugging code
-    2. Solving problems
-    3. Explaining concepts
-    4. Writing code
-    5. Writing documentation
-    6. Writing tests
-    7. Troubleshooting issues
+async function generateAiResponse(
+  messages: ChatMessage[],
+  model: string
+): Promise<string> {
+  const systemPrompt = `
+You are a helpful AI assistant for developers. You help with:
+1. Debugging code
+2. Solving problems
+3. Explaining concepts
+4. Writing code
+5. Writing documentation
+6. Writing tests
+7. Troubleshooting issues
 
-    Always Provide clear, Practcal answers.use Proper code formattig when showing examples.
-    `
-    const fullMessages =[
-        {role:"system",content:systemPrompt},
-        ...messages
-    ]
+Always provide clear, practical answers. Use proper code formatting when showing examples.
+`;
 
-    const prompt = fullMessages.map((m) => `${m.role}: ${m.content}`).join("\n\n")
+  const fullMessages = [
+    { role: "system", content: systemPrompt },
+    ...messages,
+  ];
 
-    try {
-        const response = await fetch("http://localhost:11434/api/generate",{
-            method:"POST",
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({
-                model:"codellama:latest",
-                prompt,
-                stream:false,
-                option:{temperature:0.7,max_tokens:300,top_p:0.1},
-            })
-        })
+  const prompt = fullMessages
+    .map((m) => `${m.role}: ${m.content}`)
+    .join("\n\n");
 
-        const data = await response.json()
+  try {
+    // Replace with your actual AI API endpoint
+    const apiUrl = process.env.AI_API_URL || "https://api.cerebras.ai/v1/chat/completions";
+    const apiKey = process.env.CEREBRAS_API_KEY;
 
-        if(!data.response){
-            throw new Error("No response from AI service")
-        }
-
-        return data.response.trim()
-    } catch (error) {
-        console.error(error)
-        throw new Error("Error generating AI response")
+    if (!apiKey) {
+      throw new Error("CEREBRAS_API_KEY is not set");
     }
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: fullMessages,
+        temperature: 0.7,
+        max_tokens: 2048,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("AI API Error:", errorData);
+      throw new Error(`AI API Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    // Handle different response formats
+    const content =
+      data.choices?.[0]?.message?.content ||
+      data.response ||
+      data.text;
+
+    if (!content) {
+      throw new Error("No response content from AI service");
+    }
+
+    return content.trim();
+  } catch (error) {
+    console.error("Error generating AI response:", error);
+    throw error;
+  }
 }
 
-export async function POST(request:NextRequest){
-    try {
-        const body:chatRequest = await request.json()
-        const {message,history} = body
+export async function POST(request: NextRequest) {
+  try {
+    const body: ChatRequest = await request.json();
+    const { message, history, model } = body;
 
-        if(!message || !history){
-            return NextResponse.json({error:"Invalid request"},{status:400})
-        }
-
-        const validateHistory = Array.isArray(history)?
-             history.filter((h) => {
-                h && 
-                typeof h === "object" &&
-                typeof h.role === "string" &&
-                typeof h.content === "string" &&
-                ["user","assistant"].includes(h.role)
-             }):[]
-
-        const recentHistory = validateHistory.slice(-10)
-
-        const messages :ChatMessage[] = [
-            ...recentHistory,
-            {role:"user",content:message}
-        ]
-
-        const airesponse = await generateAiresponse(messages)
-
-        return NextResponse.json({
-            response:airesponse,
-            status:200,
-            timestamp: new Date().toISOString()
-
-        })
-    } catch (error) {
-        console.error(error)
-        NextResponse.json({error:"Internal Server Error"},{status:500})
+    // Validate request
+    if (!message || !history || !model) {
+      return NextResponse.json(
+        { error: "Invalid request: missing message, history, or model" },
+        { status: 400 }
+      );
     }
+
+    // Validate and filter history
+    const validateHistory = Array.isArray(history)
+      ? history.filter(
+          (h) =>
+            h &&
+            typeof h === "object" &&
+            typeof h.role === "string" &&
+            typeof h.content === "string" &&
+            ["user", "assistant"].includes(h.role.toLowerCase())
+        )
+      : [];
+
+    const recentHistory = validateHistory.slice(-10);
+
+    const messages: ChatMessage[] = [
+      ...recentHistory,
+      { role: "user", content: message },
+    ];
+
+    // Generate AI response
+    const aiResponse = await generateAiResponse(messages, model);
+
+    return NextResponse.json({
+      response: aiResponse,
+      model: model,
+      tokens: aiResponse.split(" ").length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error in chat API:", error);
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Internal Server Error",
+      },
+      { status: 500 }
+    );
+  }
 }

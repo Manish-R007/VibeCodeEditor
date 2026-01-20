@@ -5,22 +5,11 @@ import { useState, useCallback, useRef } from "react";
 export const useAISuggestions = () => {
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [position, setPosition] = useState<{ line: number; column: number } | null>(null);
-  const [isEnabled, setIsEnabled] = useState(true);
 
-  const decorationIdsRef = useRef<string[]>([]);
-  const lastContextKeyRef = useRef<string>("");
-
-  const toggleEnabled = useCallback(() => {
-    setIsEnabled(prev => !prev);
-    setSuggestion(null);
-    setPosition(null);
-    decorationIdsRef.current = [];
-    lastContextKeyRef.current = "";
-  }, []);
+  const lastContextRef = useRef("");
 
   const fetchSuggestion = useCallback(async (editor: any) => {
-    if (!isEnabled || isLoading || !editor) return;
+    if (!editor || isLoading) return;
 
     const model = editor.getModel();
     const cursor = editor.getPosition();
@@ -32,13 +21,10 @@ export const useAISuggestions = () => {
     const prefix = fullText.slice(0, offset);
     const suffix = fullText.slice(offset);
 
-    // 🔥 STRONG DEDUPLICATION KEY
-    const contextKey =
-      prefix.slice(-400) + "::" + suffix.slice(0, 200);
+    const contextKey = prefix.slice(-250) + "||" + suffix.slice(0, 80);
+    if (contextKey === lastContextRef.current) return;
 
-    if (contextKey === lastContextKeyRef.current) return;
-    lastContextKeyRef.current = contextKey;
-
+    lastContextRef.current = contextKey;
     setIsLoading(true);
 
     try {
@@ -52,77 +38,31 @@ export const useAISuggestions = () => {
         }),
       });
 
-
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
       const data = await res.json();
-      const text =
-        data.completion || data.suggestion || "";
+      const text = data.completion?.trim();
 
-        console.log(text);
-        
-
-      if (text.trim()) {
-        setSuggestion(text.trim());
-        setPosition({
-          line: cursor.lineNumber,
-          column: cursor.column,
-        });
+      if (text) {
+        setSuggestion(text);
+      } else {
+        setSuggestion(null);
       }
     } catch (err) {
-      console.error("AI suggestion error:", err);
+      console.error("AI error", err);
+      setSuggestion(null);
     } finally {
       setIsLoading(false);
     }
-  }, [isEnabled, isLoading]);
+  }, [isLoading]);
 
-  const clearDecorations = useCallback((editor: any) => {
-    if (editor && decorationIdsRef.current.length > 0) {
-      editor.deltaDecorations(decorationIdsRef.current, []);
-      decorationIdsRef.current = [];
-    }
+  const clearSuggestion = useCallback(() => {
     setSuggestion(null);
-    setPosition(null);
-  }, []);
-
-  const acceptSuggestion = useCallback((editor: any, monaco: any) => {
-    if (!suggestion || !position || !editor || !monaco) return;
-
-    editor.executeEdits("ai-suggestion", [
-      {
-        range: new monaco.Range(
-          position.line,
-          position.column,
-          position.line,
-          position.column
-        ),
-        text: suggestion,
-        forceMoveMarkers: true,
-      },
-    ]);
-
-    clearDecorations(editor);
-  }, [suggestion, position, clearDecorations]);
-
-  const rejectSuggestion = useCallback((editor: any) => {
-    clearDecorations(editor);
-  }, [clearDecorations]);
-
-  const setDecorations = useCallback((ids: string[]) => {
-    decorationIdsRef.current = ids;
+    lastContextRef.current = "";
   }, []);
 
   return {
     suggestion,
     isLoading,
-    position,
-    isEnabled,
-    toggleEnabled,
     fetchSuggestion,
-    acceptSuggestion,
-    rejectSuggestion,
-    clearDecorations,
-    setDecorations,
+    clearSuggestion,
   };
 };

@@ -27,7 +27,6 @@ const languageMap: Record<string, string> = {
   css: "css",
 };
 
-/* -------------------- COMPONENT -------------------- */
 export const PlaygroundEditor = ({
   activeFile,
   content,
@@ -45,7 +44,10 @@ export const PlaygroundEditor = ({
 
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<Monaco | null>(null);
+  const providerRef = useRef<any>(null);
   const [value, setValue] = useState(content);
+  const currentSuggestionRef = useRef<string | null>(null);
+  const disposablesRef = useRef<any[]>([]);
 
   const language =
     languageMap[activeFile?.fileExtension ?? ""] ?? "typescript";
@@ -55,14 +57,13 @@ export const PlaygroundEditor = ({
     setValue(content);
   }, [content]);
 
-  /* -------------------- CLEAR ON FILE SWITCH -------------------- */
+  /* -------------------- CLEAR ON FILE CHANGE -------------------- */
   useEffect(() => {
-    if (editorRef.current) {
-      aiSuggestions.rejectSuggestion(editorRef.current);
-    }
-  }, [activeFile?.filename, aiSuggestions]);
+    aiSuggestions.clearSuggestion();
+    currentSuggestionRef.current = null;
+  }, [activeFile?.filename]);
 
-  /* -------------------- ON MOUNT -------------------- */
+  /* -------------------- MOUNT -------------------- */
   const onMount = (editor: any, monaco: Monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
@@ -71,104 +72,189 @@ export const PlaygroundEditor = ({
       inlineSuggest: { enabled: true },
       quickSuggestions: false,
       suggestOnTriggerCharacters: false,
-      minimap: { enabled: true },
       wordWrap: "on",
       fontSize: 14,
+      minimap: { enabled: false },
     });
 
-    /* TAB → accept suggestion */
-    editor.addCommand(monaco.KeyCode.Tab, () => {
-      if (aiSuggestions.suggestion && aiSuggestions.position) {
-        aiSuggestions.acceptSuggestion(editor, monaco);
-        // REMOVED: aiSuggestions.rejectSuggestion(editor); // This was clearing the suggestion immediately
+    // Clear suggestion on Escape
+    const escapeDisposable = editor.addCommand(monaco.KeyCode.Escape, () => {
+      aiSuggestions.clearSuggestion();
+      currentSuggestionRef.current = null;
+    });
+    disposablesRef.current.push(escapeDisposable);
+
+    // Accept suggestion on Tab
+    const tabDisposable = editor.addCommand(monaco.KeyCode.Tab, () => {
+      if (currentSuggestionRef.current) {
+        acceptSuggestion(editor, monaco);
+        return;
       }
+      // Insert normal tab
+      const pos = editor.getPosition();
+      const model = editor.getModel();
+      model.applyEdits([
+        {
+          range: new monaco.Range(
+            pos.lineNumber,
+            pos.column,
+            pos.lineNumber,
+            pos.column
+          ),
+          text: "\t",
+        },
+      ]);
     });
+    disposablesRef.current.push(tabDisposable);
 
-    /* ESC → dismiss suggestion */
-    editor.addCommand(monaco.KeyCode.Escape, () => {
-      aiSuggestions.rejectSuggestion(editor);
-    });
-
-    /* typing clears stale AI */
-    editor.onDidChangeModelContent(() => {
-      if (aiSuggestions.suggestion) {
-        aiSuggestions.rejectSuggestion(editor);
+    // Accept suggestion on Ctrl/Cmd+Right Arrow
+    const ctrlRightDisposable = editor.addCommand(
+      monaco.KeyMod.CtrlCmd | monaco.KeyCode.RightArrow,
+      () => {
+        if (currentSuggestionRef.current) {
+          acceptSuggestion(editor, monaco);
+        }
       }
-    });
+    );
+    disposablesRef.current.push(ctrlRightDisposable);
   };
 
-  /* -------------------- INLINE PROVIDER (refresh on suggestion change) -------------------- */
-  useEffect(() => {
-    const editor = editorRef.current;
-    const monaco = monacoRef.current;
-    if (!editor || !monaco) return;
+  /* -------------------- ACCEPT SUGGESTION -------------------- */
+  const acceptSuggestion = (editor: any, monaco: Monaco) => {
+    const suggestionToAccept = currentSuggestionRef.current;
+    if (!suggestionToAccept) return;
 
-    const disposable = monaco.languages.registerInlineCompletionsProvider(language, {
-      provideInlineCompletions(model, position) {
-        if (!aiSuggestions.suggestion || !aiSuggestions.position) {
-          return { items: [], dispose() {} };
+    const position = editor.getPosition();
+    const model = editor.getModel();
+    if (!position || !model) return;
+
+    const edit = {
+      range: new monaco.Range(
+        position.lineNumber,
+        position.column,
+        position.lineNumber,
+        position.column
+      ),
+      text: suggestionToAccept,
+    };
+
+    model.applyEdits([edit]);
+
+    const lines = suggestionToAccept.split("\n");
+    const lastLineLength = lines[lines.length - 1].length;
+    const newLineNumber = position.lineNumber + (lines.length - 1);
+    const newColumn =
+      lines.length === 1
+        ? position.column + lastLineLength
+        : lastLineLength + 1;
+
+    editor.setPosition({
+      lineNumber: newLineNumber,
+      column: newColumn,
+    });
+
+    // Clear both references
+    aiSuggestions.clearSuggestion();
+    currentSuggestionRef.current = null;
+  };
+
+  /* -------------------- INLINE COMPLETIONS PROVIDER -------------------- */
+  useEffect(() => {
+    const monaco = monacoRef.current;
+    const editor = editorRef.current;
+    if (!monaco || !editor) return;
+
+    // Dispose previous provider
+    if (providerRef.current) {
+      providerRef.current.dispose();
+    }
+
+    const provider = {
+      provideInlineCompletions: (model: any, position: any) => {
+        if (!aiSuggestions.suggestion) {
+          currentSuggestionRef.current = null;
+          return { items: [] };
         }
+
+        // Store the current suggestion
+        currentSuggestionRef.current = aiSuggestions.suggestion;
 
         return {
           items: [
             {
               insertText: aiSuggestions.suggestion,
               range: new monaco.Range(
-                aiSuggestions.position.line,
-                aiSuggestions.position.column,
-                aiSuggestions.position.line,
-                aiSuggestions.position.column
+                position.lineNumber,
+                position.column,
+                position.lineNumber,
+                position.column
               ),
             },
           ],
-          dispose: () => {},
         };
       },
-      disposeInlineCompletions() {},
-    });
+      freeInlineCompletions: () => {},
+    };
 
-    // Trigger inline suggestion preview
-    if (aiSuggestions.suggestion) {
-      editor.trigger("ai", "editor.action.inlineSuggest.trigger", {});
-    }
+    providerRef.current = monaco.languages.registerInlineCompletionsProvider(
+      { pattern: "**" },
+      provider
+    );
 
-    return () => disposable.dispose();
-  }, [aiSuggestions.suggestion, language]);
+    return () => {
+      if (providerRef.current) {
+        providerRef.current.dispose();
+        providerRef.current = null;
+      }
+    };
+  }, [aiSuggestions.suggestion]);
 
-  /* -------------------- AUTO AI TRIGGER -------------------- */
+  /* -------------------- TRIGGER INLINE UI -------------------- */
   useEffect(() => {
-    if (!editorRef.current || !aiSuggestions.isEnabled || aiSuggestions.isLoading) {
-      return;
-    }
+    if (!editorRef.current || !aiSuggestions.suggestion) return;
 
-    const editor = editorRef.current;
+    try {
+      editorRef.current.trigger(
+        "ai",
+        "editor.action.inlineSuggest.trigger",
+        {}
+      );
+    } catch (e) {
+      console.error("Error triggering inline suggest:", e);
+    }
+  }, [aiSuggestions.suggestion]);
+
+  /* -------------------- AUTO FETCH -------------------- */
+  useEffect(() => {
+    if (!editorRef.current || aiSuggestions.isLoading) return;
 
     const debounce = setTimeout(() => {
-      aiSuggestions.fetchSuggestion(editor).then(() => {
-        // Trigger inline suggestion after fetching
-        if (aiSuggestions.suggestion) {
-          editor.trigger("ai", "editor.action.inlineSuggest.trigger", {});
-        }
-      });
-    }, 350);
+      aiSuggestions.fetchSuggestion(editorRef.current);
+    }, 1200);
 
     return () => clearTimeout(debounce);
-  }, [value, aiSuggestions, language]);
+  }, [value, aiSuggestions]);
 
-  /* -------------------- HANDLE CONTENT CHANGE -------------------- */
+  /* -------------------- CLEANUP -------------------- */
+  useEffect(() => {
+    return () => {
+      disposablesRef.current.forEach((d) => d?.dispose?.());
+      disposablesRef.current = [];
+      if (providerRef.current) {
+        providerRef.current.dispose();
+      }
+    };
+  }, []);
+
+  /* -------------------- CHANGE -------------------- */
   const onChange = (val?: string) => {
     if (val === undefined) return;
     setValue(val);
     onContentChange(val);
   };
 
-  /* -------------------- UI -------------------- */
   return (
     <div className="relative h-full">
-      <div className="absolute top-2 left-2 z-50 text-xs bg-black/70 text-white px-3 py-1 rounded">
-        🤖 AI: {aiSuggestions.isEnabled ? "ON" : "OFF"}
-      </div>
-
       {(suggestionLoading || aiSuggestions.isLoading) && (
         <div className="absolute top-2 right-2 z-50 text-xs bg-blue-600 text-white px-3 py-1 rounded">
           AI Thinking…

@@ -48,6 +48,8 @@ import {
 import "katex/dist/katex.min.css";
 import Image from "next/image";
 import Stream from "stream";
+import {useCurrentUser} from '../../auth/hooks/use-current-user';
+import { AvatarImage } from "@radix-ui/react-avatar";
 
 interface ChatMessage {
     role: "user" | "assistant";
@@ -123,9 +125,13 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
     const [filterType, setFilterType] = useState<string>("all");
     const [autoSave, setAutoSave] = useState(true);
     const [streamResponse, setStreamResponse] = useState(true);
-    const [model, setModel] = useState<string>("gpt-6");
+    const [model, setModel] = useState<string>("llama3.1-8b");
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const user = useCurrentUser();
+    console.log(user);
+    
 
     const scrollToBottom = () => {
         if (messagesEndRef.current) {
@@ -185,6 +191,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.CEREBRAS_API_KEY}`,
         },
         body: JSON.stringify({
           message: contextualMessage,
@@ -391,9 +398,12 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                                             onChange={(e) => setModel(e.target.value)}
                                             className="bg-zinc-900/60 border border-zinc-800 rounded px-2 py-1 text-zinc-200 focus:outline-none"
                                         >
-                                            <option value="gpt-6">gpt-6</option>
-                                            <option value="codellama">codellama</option>
-                                            <option value="llama2">llama2</option>
+                                            <option value="llama3.1-8b">llama3.1-8b</option>
+                                            <option value="llama-3.3-70b">llama-3.3-70b</option>
+                                            <option value="gpt-oss-120b">gpt-oss-120b</option>
+                                            <option value="qwen-3-32b">qwen-3-32b</option>
+                                            <option value="zai-glm-4.6">zai-glm-4.6</option>
+                                            <option value="qwen-3-235b-a22b-instruct-2507">qwen-3-235b-a22b-instruct-2507</option>
                                         </select>
                                     </div>
                                     <div className="relative">
@@ -503,7 +513,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                                                 <MessageTypeIndicator
                                                     type={msg.type}
                                                     model={msg.model}
-                                                    tokens={msg.tokens}
+                                                
                                                 />
                                             )}
 
@@ -564,9 +574,8 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
 
                                         {msg.role === "user" && (
                                             <Avatar className="h-9 w-9 border border-zinc-700 bg-zinc-800 shrink-0">
-                                                <AvatarFallback className="bg-zinc-700 text-zinc-300">
-                                                    <User className="h-5 w-5" />
-                                                </AvatarFallback>
+                                                <AvatarImage src={user?.image || "User"}/>
+                                               
                                             </Avatar>
                                         )}
                                     </div>
