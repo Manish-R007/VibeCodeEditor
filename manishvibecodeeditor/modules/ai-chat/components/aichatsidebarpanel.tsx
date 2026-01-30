@@ -392,18 +392,19 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
 
                                 <div className="flex items-center gap-2">
                                     <div className="hidden sm:flex items-center gap-2 text-xs text-zinc-400">
-                                        <span className="text-zinc-500">Model:</span>
+                                        <span className="text-white">Model:</span>
                                         <select
+                                            // className="bg-zinc-900/60 border border-zinc-800 rounded px-2 py-1 text-zinc-200 focus:outline-none"
                                             value={model}
                                             onChange={(e) => setModel(e.target.value)}
-                                            className="bg-zinc-900/60 border border-zinc-800 rounded px-2 py-1 text-zinc-200 focus:outline-none"
+                                            className="bg-zinc-900 border border-zinc-800 rounded-xl px-2 py-1 text-zinc-200 focus:outline-none"
                                         >
-                                            <option value="llama3.1-8b">llama3.1-8b</option>
-                                            <option value="llama-3.3-70b">llama-3.3-70b</option>
-                                            <option value="gpt-oss-120b">gpt-oss-120b</option>
-                                            <option value="qwen-3-32b">qwen-3-32b</option>
-                                            <option value="zai-glm-4.6">zai-glm-4.6</option>
-                                            <option value="qwen-3-235b-a22b-instruct-2507">qwen-3-235b-a22b-instruct-2507</option>
+                                            <option className="rounded-xl" value="llama3.1-8b">llama3.1-8b</option>
+                                            <option  className="rounded-xl" value="llama-3.3-70b">llama-3.3-70b</option>
+                                            <option  className="rounded-xl" value="gpt-oss-120b">gpt-oss-120b</option>
+                                            <option   className="rounded-xl" value="qwen-3-32b">qwen-3-32b</option>
+                                            <option  className="rounded-xl" value="zai-glm-4.6">zai-glm-4.6</option>
+                                            <option  className="rounded-xl" value="qwen-3-235b-a22b-instruct-2507">qwen-3-235b-a22b-instruct-2507</option>
                                         </select>
                                     </div>
                                     <div className="relative">
