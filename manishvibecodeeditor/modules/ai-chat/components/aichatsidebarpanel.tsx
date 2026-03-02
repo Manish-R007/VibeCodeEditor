@@ -361,7 +361,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                         {/* Enhanced Controls */}
                         <Tabs
                             value={chatMode}
-                            onValueChange={(value) => setChatMode(value as any)}
+                            onValueChange={(value) =>  setChatMode(value as any)}
                             className="px-6"
                         >
                             <div className="flex items-center justify-between mb-4">
