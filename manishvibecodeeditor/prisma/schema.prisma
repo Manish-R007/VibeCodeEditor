@@ -105,6 +105,11 @@ model ChatMessage {
   @@index([userId])
 }
 
+model PaymentSchema{
+  
+  
+}
+
 
 
 
