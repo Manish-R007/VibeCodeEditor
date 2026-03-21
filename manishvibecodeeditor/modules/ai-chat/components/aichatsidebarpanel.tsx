@@ -4,12 +4,11 @@ import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
     Loader2,
     Send,
-    User,
     Copy,
 
     X,
@@ -47,9 +46,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import "katex/dist/katex.min.css";
 import Image from "next/image";
-import Stream from "stream";
 import {useCurrentUser} from '../../auth/hooks/use-current-user';
-import { AvatarImage } from "@radix-ui/react-avatar";
 
 interface ChatMessage {
     role: "user" | "assistant";
@@ -191,7 +188,6 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.CEREBRAS_API_KEY}`,
         },
         body: JSON.stringify({
           message: contextualMessage,
@@ -575,8 +571,10 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
 
                                         {msg.role === "user" && (
                                             <Avatar className="h-9 w-9 border border-zinc-700 bg-zinc-800 shrink-0">
-                                                <AvatarImage src={user?.image || "User"}/>
-                                               
+                                                <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+                                                <AvatarFallback>
+                                                    {(user?.name || "U").slice(0, 1).toUpperCase()}
+                                                </AvatarFallback>
                                             </Avatar>
                                         )}
                                     </div>
@@ -637,7 +635,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                                 />
                                 <div className="absolute right-3 bottom-3 flex items-center gap-2">
                                     <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-xs text-zinc-500 bg-zinc-800 border border-zinc-700 rounded">
-                                        ⌘↵
+                                        Ctrl+Enter
                                     </kbd>
                                 </div>
                             </div>
