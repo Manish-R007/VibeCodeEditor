@@ -9,7 +9,19 @@ export const getPlaygroundById = async (id: string) => {
         const playground = await db.playground.findUnique({
             where: {id},
             select:{
+                id: true,
                 title: true,
+                templates: true,
+                templateFiles: {
+                    select: {
+                        content: true,
+                        updatedAt: true,
+                    },
+                    orderBy: {
+                        updatedAt: "desc",
+                    },
+                    take: 1,
+                },
             }
         })
         return playground
@@ -19,7 +31,7 @@ export const getPlaygroundById = async (id: string) => {
 }
 
 export const SaveUpdatedCode = async (PlaygroundId: string, data: TemplateFolder) => {
-    const user = getCurrentUser()
+    const user = await getCurrentUser()
     if(!user) {
         throw new Error('Unauthorized')
     }
@@ -41,5 +53,6 @@ export const SaveUpdatedCode = async (PlaygroundId: string, data: TemplateFolder
         return updatedPlayground
     } catch (error) {
         console.log('Error in saving the playground data',error);
+        throw error
     }
 }
