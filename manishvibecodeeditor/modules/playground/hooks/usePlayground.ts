@@ -7,7 +7,12 @@ import { getPlaygroundById, SaveUpdatedCode } from "../actions";
 interface PlaygroundData {
   id: string;
   title?: string;
-  [key: string]: any;
+  templates?: string;
+  templateFiles?: Array<{
+    content: unknown;
+    updatedAt: string | Date;
+  }>;
+  [key: string]: unknown;
 }
 
 interface UsePlaygroundReturn {
@@ -16,7 +21,7 @@ interface UsePlaygroundReturn {
   isLoading: boolean;
   error: string | null;
   loadPlayground: () => Promise<void>;
-  saveTemplateData: (data: TemplateFolder) => Promise<void>;
+  saveTemplateData: (data: TemplateFolder) => Promise<TemplateFolder>;
 }
 
 export const usePlayground = (id: string): UsePlaygroundReturn => {
@@ -36,12 +41,14 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
 
       const data = await getPlaygroundById(id);
 
-      //   @ts-ignore
-      setPlaygroundData(data);
+      setPlaygroundData(data ?? null);
       const rawContent = data?.templateFiles?.[0]?.content;
 
-      if (typeof rawContent === "string") {
-        const parsedContent = JSON.parse(rawContent);
+      if (rawContent) {
+        const parsedContent =
+          typeof rawContent === "string"
+            ? JSON.parse(rawContent)
+            : rawContent;
         setTemplateData(parsedContent);
         toast.success("playground loaded successfully");
         return;
@@ -80,11 +87,15 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
 
    const savedTemplateData = useCallback(async (data: TemplateFolder) => {
     try {
-        await SaveUpdatedCode(id,data)
+        const result = await SaveUpdatedCode(id,data)
         toast.success("Template saved successfully");
+        return typeof result?.content === "string"
+          ? JSON.parse(result.content)
+          : (result?.content as TemplateFolder) ?? data;
     } catch (error) {
         console.error("Error saving template data:", error);
         toast.error("Failed to save template data");
+        throw error;
     }
    },[id])
     
