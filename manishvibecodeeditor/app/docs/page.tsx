@@ -1,522 +1,496 @@
-'use client'
+"use client";
 
-import React from 'react';
-import { 
-  BookOpen, 
-  Code, 
-  MessageSquare, 
-  Play, 
-  Star, 
-  Copy, 
-  Trash2, 
-  Edit,
-  Search,
-  Zap,
-  Cpu,
-  Sparkles,
-  Terminal,
-  FileCode,
-  Shield,
-  Users,
-  Download,
-  Share2,
-  Eye,
-  Save,
-  ChevronRight,
-  ExternalLink,
-  Plus,
-  Send,
-  Brain,
+import Link from "next/link";
+import {
+  ArrowRight,
+  BookOpen,
+  Bot,
+  CheckCircle2,
   Code2,
+  Database,
+  FileCode2,
+  Github,
   GitBranch,
-  Cloud,
-  Lock
-} from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  LayoutDashboard,
+  Lock,
+  MonitorPlay,
+  PanelLeft,
+  Play,
+  Plus,
+  Rocket,
+  Save,
+  Settings2,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Terminal,
+  Workflow,
+} from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const navItems = [
+  "Overview",
+  "Create Playgrounds",
+  "GitHub Imports",
+  "Editor Workflow",
+  "AI Assistant",
+  "Persistence",
+];
+
+const featureCards = [
+  {
+    title: "Template Playgrounds",
+    description:
+      "Start a project from React, Next.js, Vue, Angular, Hono, or Express templates and open it directly in the browser editor.",
+    icon: Plus,
+  },
+  {
+    title: "GitHub Repository Import",
+    description:
+      "Sign in with GitHub, browse your repositories, select one, and generate a playground from its source files.",
+    icon: Github,
+  },
+  {
+    title: "Monaco Code Editor",
+    description:
+      "Edit files with a modern editor experience, file tabs, syntax highlighting, and save support.",
+    icon: Code2,
+  },
+  {
+    title: "WebContainer Runtime",
+    description:
+      "Mount playground files in a browser runtime, install dependencies, run commands, and preview the app.",
+    icon: MonitorPlay,
+  },
+  {
+    title: "AI Coding Panel",
+    description:
+      "Use the side assistant for code questions, suggestions, explanations, and workflow support inside the playground.",
+    icon: Bot,
+  },
+  {
+    title: "Project Dashboard",
+    description:
+      "Manage recent projects, favorites, duplicate playgrounds, delete old work, and jump back into active sessions.",
+    icon: LayoutDashboard,
+  },
+];
+
+const workflowSteps = [
+  {
+    title: "Authenticate",
+    description: "Continue with GitHub so VibeCodeEditor can read your repositories securely.",
+    icon: Lock,
+  },
+  {
+    title: "Choose a Source",
+    description: "Create from a starter template or select an existing GitHub repository.",
+    icon: GitBranch,
+  },
+  {
+    title: "Edit in Playground",
+    description: "Browse the file tree, open files, edit code, and save changes to the playground snapshot.",
+    icon: FileCode2,
+  },
+  {
+    title: "Run and Preview",
+    description: "Use the WebContainer terminal and preview panel to test your app without leaving the browser.",
+    icon: Terminal,
+  },
+];
+
+const supportedTemplates = [
+  "React",
+  "Next.js",
+  "Vue",
+  "Angular",
+  "Hono",
+  "Express",
+];
+
+const githubImportNotes = [
+  "Fetches repositories through the authenticated GitHub session.",
+  "Imports source files into the same JSON tree used by template playgrounds.",
+  "Skips heavy folders such as node_modules, build, dist, coverage, and .git.",
+  "Creates a playground record and opens /playground/[id] after selection.",
+];
+
+const editorCapabilities = [
+  {
+    label: "Explorer",
+    text: "Create, rename, delete, and organize files and folders from the playground sidebar.",
+  },
+  {
+    label: "Tabs",
+    text: "Open multiple files and switch between active editor buffers quickly.",
+  },
+  {
+    label: "Save",
+    text: "Persist the current template tree through the playground save action.",
+  },
+  {
+    label: "Preview",
+    text: "Mount files to WebContainer and run the project in a browser preview panel.",
+  },
+];
+
+const stackItems = [
+  "Next.js 16",
+  "React 19",
+  "TypeScript",
+  "Prisma",
+  "MongoDB",
+  "NextAuth",
+  "Monaco Editor",
+  "WebContainer API",
+  "Tailwind CSS",
+  "shadcn/ui",
+];
 
 export default function DocumentationPage() {
-  const frameworks = [
-    { id: 'react', name: 'React', icon: '⚛️', color: 'from-blue-500/20 to-cyan-500/20 border-blue-500/30' },
-    { id: 'vue', name: 'Vue.js', icon: '🟢', color: 'from-green-500/20 to-emerald-500/20 border-green-500/30' },
-    { id: 'angular', name: 'Angular', icon: '🟥', color: 'from-red-500/20 to-rose-500/20 border-red-500/30' },
-    { id: 'nextjs', name: 'Next.js', icon: '▲', color: 'from-gray-800/30 to-black border-gray-700/50' },
-    { id: 'svelte', name: 'Svelte', icon: '🟧', color: 'from-orange-500/20 to-amber-500/20 border-orange-500/30' },
-    { id: 'nuxt', name: 'Nuxt.js', icon: '🟩', color: 'from-emerald-500/20 to-teal-500/20 border-emerald-500/30' },
-  ];
-
-  const playgrounds = [
-    { id: 1, name: 'React Dashboard', framework: 'react', lastEdited: '2 hours ago', starred: true, description: 'Modern admin dashboard with charts' },
-    { id: 2, name: 'Vue E-commerce', framework: 'vue', lastEdited: '1 day ago', starred: false, description: 'Full-featured online store' },
-    { id: 3, name: 'Next.js Blog', framework: 'nextjs', lastEdited: '3 days ago', starred: true, description: 'SSR blog with MDX support' },
-    { id: 4, name: 'Svelte Portfolio', framework: 'svelte', lastEdited: '1 week ago', starred: false, description: 'Interactive portfolio website' },
-  ];
-
-  const aiMessages = [
-    { id: 1, sender: 'ai', content: 'I notice you\'re working on a React component. Would you like me to optimize the useEffect hooks?', time: '10:30 AM' },
-    { id: 2, sender: 'user', content: 'Yes, please suggest improvements for performance', time: '10:32 AM' },
-    { id: 3, sender: 'ai', content: 'I recommend combining multiple useEffect hooks and adding useMemo for expensive calculations. Also, consider React.memo for the component.', time: '10:33 AM' },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-950 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 z-0">
-        {/* Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#333_1px,transparent_1px),linear-gradient(to_bottom,#333_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,black,transparent)] opacity-10" />
-        
-        {/* Floating Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-3/4 left-1/3 w-64 h-64 bg-gradient-to-r from-emerald-600/10 to-teal-600/10 rounded-full blur-3xl animate-pulse delay-2000" />
-        
-        {/* Moving Particles */}
-        <div className="absolute inset-0">
-          {Array.from({ length: 50 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-blue-500/20 rounded-full animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${3 + Math.random() * 7}s`,
-              }}
-            />
-          ))}
-        </div>
+    <main className="min-h-screen bg-[#0b0d10] text-slate-100">
+      <section className="border-b border-white/10 bg-[linear-gradient(135deg,#10151f_0%,#0b0d10_42%,#161114_100%)]">
+        <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-10 lg:px-8">
+          <header className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <Link href="/" className="flex items-center gap-3">
+              <span className="flex size-11 items-center justify-center rounded-lg border border-red-500/30 bg-red-500/10">
+                <Terminal className="size-5 text-red-400" />
+              </span>
+              <span>
+                <span className="block text-lg font-semibold">VibeCodeEditor</span>
+                <span className="block text-sm text-slate-400">Project documentation</span>
+              </span>
+            </Link>
 
-        {/* Shimmer Lines */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent animate-shimmer" />
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent animate-shimmer delay-1000" />
-      </div>
-
-      <style jsx global>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0) translateX(0); }
-          50% { transform: translateY(-20px) translateX(10px); }
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-        .animate-float {
-          animation: float ease-in-out infinite;
-        }
-        .animate-shimmer {
-          background-size: 200% auto;
-          animation: shimmer 3s linear infinite;
-        }
-      `}</style>
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-gray-800/50 bg-gray-900/80 backdrop-blur-xl supports-[backdrop-filter]:bg-gray-900/60">
-        <div className="container flex h-16 items-center justify-between px-6">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-lg shadow-lg shadow-blue-500/20">
-                <Terminal className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <span className="text-xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  CodePlay
-                </span>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-xs text-gray-400">Live</span>
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button asChild variant="outline" className="border-white/15 bg-white/5 text-slate-100 hover:bg-white/10">
+                <Link href="/dashboard">
+                  <LayoutDashboard className="mr-2 size-4" />
+                  Dashboard
+                </Link>
+              </Button>
+              <Button asChild className="bg-red-500 text-white hover:bg-red-600">
+                <Link href="/dashboard">
+                  <Play className="mr-2 size-4" />
+                  Start Coding
+                </Link>
+              </Button>
             </div>
-            <nav className="hidden md:flex items-center gap-6">
-              <a href="#" className="text-sm font-medium text-gray-300 hover:text-white transition-colors group">
-                <BookOpen className="h-4 w-4 inline mr-2 group-hover:text-blue-400 transition-colors" />
-                Docs
-              </a>
-              <a href="#" className="text-sm font-medium text-gray-300 hover:text-white transition-colors group">
-                <Play className="h-4 w-4 inline mr-2 group-hover:text-purple-400 transition-colors" />
-                Playground
-              </a>
-              <a href="#" className="text-sm font-medium text-gray-300 hover:text-white transition-colors group">
-                <Users className="h-4 w-4 inline mr-2 group-hover:text-pink-400 transition-colors" />
-                Community
-              </a>
-            </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search documentation..."
-                className="pl-10 w-64 bg-gray-800/50 border-gray-700/50 text-gray-200 placeholder:text-gray-500 focus:border-blue-500/50"
-              />
-            </div>
-            <Button variant="ghost" size="icon" className="hover:bg-blue-500/10 hover:text-blue-400">
-              <Sparkles className="h-5 w-5" />
-            </Button>
-            <Avatar className="border-2 border-gray-700">
-              <AvatarImage src="https://github.com/shadcn.png" />
-              <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600">CN</AvatarFallback>
-            </Avatar>
-          </div>
-        </div>
-      </header>
+          </header>
 
-      <div className="container px-6 py-8 mx-auto relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Sidebar - Documentation Navigation */}
-          <div className="lg:col-span-3 space-y-6">
-            <Card className="bg-gray-900/60 backdrop-blur-sm border-gray-800/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-100">
-                  <BookOpen className="h-5 w-5 text-blue-400" />
-                  Documentation
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {['Getting Started', 'Playground Guide', 'AI Features', 'Framework Support', 'API Reference', 'Best Practices'].map((item) => (
-                  <Button
-                    key={item}
-                    variant="ghost"
-                    className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 group transition-all duration-200"
-                  >
-                    <ChevronRight className="h-4 w-4 mr-2 text-gray-500 group-hover:text-blue-400 transition-colors" />
-                    {item}
-                  </Button>
+          <div className="grid gap-10 lg:grid-cols-[1fr_390px] lg:items-end">
+            <div className="max-w-3xl">
+              <Badge className="mb-5 border-red-500/25 bg-red-500/10 text-red-200 hover:bg-red-500/10">
+                Browser IDE with GitHub-powered playgrounds
+              </Badge>
+              <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
+                Build, import, edit, and run projects from one focused workspace.
+              </h1>
+              <p className="mt-6 text-lg leading-8 text-slate-300">
+                VibeCodeEditor combines authenticated GitHub imports, starter templates, a Monaco-powered editor,
+                WebContainer previews, and an AI coding panel into a single playground workflow.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                {supportedTemplates.map((template) => (
+                  <Badge key={template} variant="secondary" className="bg-white/8 text-slate-200 hover:bg-white/12">
+                    {template}
+                  </Badge>
                 ))}
-              </CardContent>
-            </Card>
-
-            {/* Quick Stats */}
-            <Card className="bg-gray-900/60 backdrop-blur-sm border-gray-800/50">
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-gray-300">Quick Stats</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Playgrounds</span>
-                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                    12
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">AI Sessions</span>
-                  <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                    47
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Saved Code</span>
-                  <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
-                    128
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-9 space-y-8">
-            {/* Hero Section */}
-            <div className="rounded-2xl bg-gradient-to-r from-blue-900/20 via-purple-900/20 to-pink-900/20 border border-gray-800/50 backdrop-blur-sm p-8 relative overflow-hidden">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.1),transparent_50%)]" />
-              <div className="relative z-10">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-3 mb-4">
-                      <Brain className="h-10 w-10 text-blue-400 animate-pulse" />
-                      <div>
-                        <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                          Interactive AI Playground
-                        </h1>
-                        <p className="text-gray-400 text-lg mt-2">
-                          Create, edit, and test code in real-time with intelligent AI assistance
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-4">
-                      <Button className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg shadow-blue-500/20">
-                        <Play className="h-4 w-4" />
-                        New Playground
-                      </Button>
-                      <Button variant="outline" className="gap-2 border-gray-700 text-gray-300 hover:bg-gray-800/50">
-                        <FileCode className="h-4 w-4" />
-                        View Examples
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="hidden md:block">
-                    <div className="relative">
-                      <div className="w-40 h-40 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-full animate-spin-slow" />
-                      <Code2 className="h-20 w-20 text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 
-            {/* Main Tabs */}
-            <Tabs defaultValue="playgrounds" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3 bg-gray-900/50 border border-gray-800/50 p-1 rounded-xl">
-                <TabsTrigger 
-                  value="playgrounds" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600/20 data-[state=active]:to-purple-600/20 data-[state=active]:border data-[state=active]:border-blue-500/30 text-gray-400 data-[state=active]:text-white gap-2 rounded-lg"
-                >
-                  <Play className="h-4 w-4" />
-                  Playgrounds
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="documentation" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600/20 data-[state=active]:to-purple-600/20 data-[state=active]:border data-[state=active]:border-blue-500/30 text-gray-400 data-[state=active]:text-white gap-2 rounded-lg"
-                >
-                  <BookOpen className="h-4 w-4" />
-                  Documentation
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="ai-chat" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600/20 data-[state=active]:to-purple-600/20 data-[state=active]:border data-[state=active]:border-blue-500/30 text-gray-400 data-[state=active]:text-white gap-2 rounded-lg"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  AI Assistant
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Playgrounds Tab */}
-              <TabsContent value="playgrounds" className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-white">Your Playgrounds</h2>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800/50">
-                      <Download className="h-4 w-4 mr-2" />
-                      Export All
-                    </Button>
-                    <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 border-0">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create New
-                    </Button>
-                  </div>
+            <div className="rounded-lg border border-white/10 bg-black/35 p-5 shadow-2xl shadow-black/30">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="size-3 rounded-full bg-red-400" />
+                  <span className="size-3 rounded-full bg-yellow-300" />
+                  <span className="size-3 rounded-full bg-emerald-400" />
                 </div>
-
-                {/* Framework Selection */}
-                <Card className="bg-gray-900/60 backdrop-blur-sm border-gray-800/50">
-                  <CardHeader>
-                    <CardTitle className="text-white">Select Framework</CardTitle>
-                    <CardDescription className="text-gray-400">Choose a framework to start coding</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                      {frameworks.map((fw) => (
-                        <button
-                          key={fw.id}
-                          className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 bg-gradient-to-br ${fw.color} hover:scale-105 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 group`}
-                        >
-                          <span className="text-2xl mb-2 group-hover:scale-110 transition-transform">{fw.icon}</span>
-                          <span className="font-medium text-gray-200 group-hover:text-white">{fw.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Playground List */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {playgrounds.map((playground) => (
-                    <Card 
-                      key={playground.id} 
-                      className="bg-gray-900/40 backdrop-blur-sm border-gray-800/50 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 group"
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <div className="flex items-center gap-2 mb-2">
-                              <Badge 
-                                className={`bg-gradient-to-r ${frameworks.find(f => f.id === playground.framework)?.color} text-gray-200`}
-                              >
-                                {frameworks.find(f => f.id === playground.framework)?.icon}
-                                {playground.framework}
-                              </Badge>
-                              {playground.starred && (
-                                <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 animate-pulse" />
-                              )}
-                            </div>
-                            <h3 className="font-bold text-lg text-white">{playground.name}</h3>
-                            <p className="text-sm text-gray-400 mb-1">{playground.description}</p>
-                            <p className="text-xs text-gray-500">Last edited {playground.lastEdited}</p>
-                          </div>
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" className="hover:bg-blue-500/20 hover:text-blue-400">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="hover:bg-purple-500/20 hover:text-purple-400">
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="hover:bg-yellow-500/20 hover:text-yellow-400">
-                              <Star className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="hover:bg-red-500/20 hover:text-red-400">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800/50">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Preview
-                          </Button>
-                          <Button size="sm" className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 border-0">
-                            <Code className="h-4 w-4 mr-2" />
-                            Edit Code
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <Badge variant="outline" className="border-emerald-500/30 text-emerald-300">
+                  Live flow
+                </Badge>
+              </div>
+              <div className="space-y-3 font-mono text-sm">
+                <div className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-slate-300">
+                  <span className="text-red-300">select</span> github repository
                 </div>
-              </TabsContent>
+                <div className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-slate-300">
+                  <span className="text-sky-300">create</span> playground snapshot
+                </div>
+                <div className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-slate-300">
+                  <span className="text-emerald-300">open</span> Monaco editor and preview
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-              {/* AI Chat Tab */}
-              <TabsContent value="ai-chat" className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Chat Interface */}
-                  <Card className="lg:col-span-2 bg-gray-900/60 backdrop-blur-sm border-gray-800/50">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
-                        <MessageSquare className="h-5 w-5 text-blue-400" />
-                        AI Code Assistant
-                      </CardTitle>
-                      <CardDescription className="text-gray-400">
-                        Ask questions, generate code, or debug issues in real-time
-                      </CardDescription>
+      <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 lg:grid-cols-[260px_1fr] lg:px-8">
+        <aside className="hidden lg:block">
+          <div className="sticky top-6 space-y-6">
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+              <div className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-200">
+                <BookOpen className="size-4 text-red-300" />
+                Contents
+              </div>
+              <nav className="space-y-1">
+                {navItems.map((item) => (
+                  <a
+                    key={item}
+                    href={`#${item.toLowerCase().replaceAll(" ", "-")}`}
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
+                  >
+                    <ArrowRight className="size-3" />
+                    {item}
+                  </a>
+                ))}
+              </nav>
+            </div>
+
+            <div className="rounded-lg border border-red-500/20 bg-red-500/8 p-4">
+              <p className="text-sm font-medium text-red-100">Core idea</p>
+              <p className="mt-2 text-sm leading-6 text-red-100/75">
+                A playground is a saved project workspace. It can begin from a template or from an imported GitHub repository.
+              </p>
+            </div>
+          </div>
+        </aside>
+
+        <section className="space-y-10">
+          <section id="overview" className="space-y-5">
+            <div className="flex items-center gap-3">
+              <Rocket className="size-5 text-red-300" />
+              <h2 className="text-2xl font-semibold text-white">Overview</h2>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {featureCards.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <Card key={feature.title} className="border-white/10 bg-white/[0.035] text-slate-100">
+                    <CardHeader className="space-y-4">
+                      <span className="flex size-10 items-center justify-center rounded-md border border-white/10 bg-white/5">
+                        <Icon className="size-5 text-red-300" />
+                      </span>
+                      <CardTitle className="text-base">{feature.title}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {/* Chat Messages */}
-                        <ScrollArea className="h-[400px] rounded-lg border border-gray-800/50 p-4 bg-gray-900/30">
-                          {aiMessages.map((msg) => (
-                            <div
-                              key={msg.id}
-                              className={`mb-4 ${msg.sender === 'ai' ? 'text-left' : 'text-right'}`}
-                            >
-                              <div className={`inline-block max-w-[80%] rounded-xl p-4 ${msg.sender === 'ai' 
-                                ? 'bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-gray-700/50 text-gray-200' 
-                                : 'bg-gradient-to-r from-blue-600/80 to-purple-600/80 text-white shadow-lg shadow-blue-500/20'
-                              }`}>
-                                <div className="flex items-center gap-2 mb-2">
-                                  {msg.sender === 'ai' ? (
-                                    <Brain className="h-4 w-4 text-blue-400" />
-                                  ) : (
-                                    <Avatar className="h-6 w-6">
-                                      <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600">U</AvatarFallback>
-                                    </Avatar>
-                                  )}
-                                  <span className="text-xs font-medium">
-                                    {msg.sender === 'ai' ? 'AI Assistant' : 'You'}
-                                  </span>
-                                </div>
-                                <p>{msg.content}</p>
-                                <p className="text-xs opacity-70 mt-2 text-right">{msg.time}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </ScrollArea>
-                        
-                        {/* Chat Input */}
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Ask AI about your code..."
-                            className="flex-1 bg-gray-800/50 border-gray-700/50 text-gray-200 placeholder:text-gray-500 focus:border-blue-500/50"
-                          />
-                          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 border-0">
-                            <Send className="h-4 w-4 mr-2" />
-                            Send
-                          </Button>
-                        </div>
-                      </div>
+                      <p className="text-sm leading-6 text-slate-400">{feature.description}</p>
                     </CardContent>
                   </Card>
+                );
+              })}
+            </div>
+          </section>
 
-                  {/* AI Tools Sidebar */}
-                  <Card className="bg-gray-900/60 backdrop-blur-sm border-gray-800/50">
-                    <CardHeader>
-                      <CardTitle className="text-white">AI Tools</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <Button variant="outline" className="w-full justify-start gap-2 border-gray-700 text-gray-300 hover:bg-blue-500/20 hover:text-blue-400 hover:border-blue-500/30">
-                        <Code className="h-4 w-4" />
-                        Generate Code
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start gap-2 border-gray-700 text-gray-300 hover:bg-green-500/20 hover:text-green-400 hover:border-green-500/30">
-                        <Search className="h-4 w-4" />
-                        Find Bugs
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start gap-2 border-gray-700 text-gray-300 hover:bg-yellow-500/20 hover:text-yellow-400 hover:border-yellow-500/30">
-                        <Zap className="h-4 w-4" />
-                        Optimize Code
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start gap-2 border-gray-700 text-gray-300 hover:bg-purple-500/20 hover:text-purple-400 hover:border-purple-500/30">
-                        <FileCode className="h-4 w-4" />
-                        Convert Code
-                      </Button>
-                      
-                      <Separator className="bg-gray-800/50" />
-                      
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-300">Inline Suggestions</span>
-                          <Switch className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-600 data-[state=checked]:to-purple-600" />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-300">Auto-save</span>
-                          <Switch className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-600 data-[state=checked]:to-purple-600" defaultChecked />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-300">AI Code Review</span>
-                          <Switch className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-600 data-[state=checked]:to-purple-600" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <footer className="mt-12 border-t border-gray-800/50 py-8 relative z-10">
-        <div className="container px-6 mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center gap-3 mb-4 md:mb-0">
-              <Terminal className="h-6 w-6 text-blue-400" />
+          <section id="create-playgrounds" className="rounded-lg border border-white/10 bg-white/[0.03] p-6">
+            <div className="grid gap-8 lg:grid-cols-[1fr_330px]">
               <div>
-                <span className="text-lg font-semibold text-white">CodePlay</span>
-                <p className="text-xs text-gray-500">AI-Powered Development Platform</p>
+                <div className="flex items-center gap-3">
+                  <Workflow className="size-5 text-red-300" />
+                  <h2 className="text-2xl font-semibold text-white">Create Playgrounds</h2>
+                </div>
+                <p className="mt-4 text-slate-400">
+                  The dashboard gives you two creation paths: create from a supported starter template or import from GitHub.
+                  Both paths end in the same editor experience.
+                </p>
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  {workflowSteps.map((step, index) => {
+                    const Icon = step.icon;
+                    return (
+                      <div key={step.title} className="rounded-md border border-white/10 bg-black/20 p-4">
+                        <div className="mb-3 flex items-center justify-between">
+                          <Icon className="size-5 text-red-300" />
+                          <span className="text-xs text-slate-500">Step {index + 1}</span>
+                        </div>
+                        <h3 className="font-medium text-white">{step.title}</h3>
+                        <p className="mt-2 text-sm leading-6 text-slate-400">{step.description}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-[#0f1319] p-5">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
+                  <PanelLeft className="size-4 text-red-300" />
+                  Dashboard actions
+                </div>
+                <div className="mt-5 space-y-3">
+                  <div className="rounded-md border border-white/10 bg-white/5 p-4">
+                    <Plus className="mb-3 size-5 text-red-300" />
+                    <p className="font-medium text-white">Add New</p>
+                    <p className="mt-1 text-sm text-slate-400">Choose a starter template and project name.</p>
+                  </div>
+                  <div className="rounded-md border border-white/10 bg-white/5 p-4">
+                    <Github className="mb-3 size-5 text-red-300" />
+                    <p className="font-medium text-white">Open GitHub Repository</p>
+                    <p className="mt-1 text-sm text-slate-400">Select a repository and create a playground.</p>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="flex gap-6 text-sm">
-              <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">Terms</a>
-              <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">Privacy</a>
-              <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">Contact</a>
-              <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
-                <GitBranch className="h-4 w-4 inline mr-1" />
+          </section>
+
+          <Tabs defaultValue="github" className="space-y-5">
+            <TabsList className="grid h-auto grid-cols-2 rounded-lg border border-white/10 bg-white/[0.03] p-1 md:grid-cols-4">
+              <TabsTrigger value="github" className="gap-2 data-[state=active]:bg-red-500 data-[state=active]:text-white">
+                <Github className="size-4" />
                 GitHub
-              </a>
+              </TabsTrigger>
+              <TabsTrigger value="editor" className="gap-2 data-[state=active]:bg-red-500 data-[state=active]:text-white">
+                <Code2 className="size-4" />
+                Editor
+              </TabsTrigger>
+              <TabsTrigger value="ai" className="gap-2 data-[state=active]:bg-red-500 data-[state=active]:text-white">
+                <Sparkles className="size-4" />
+                AI
+              </TabsTrigger>
+              <TabsTrigger value="data" className="gap-2 data-[state=active]:bg-red-500 data-[state=active]:text-white">
+                <Database className="size-4" />
+                Data
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent id="github-imports" value="github" className="rounded-lg border border-white/10 bg-white/[0.03] p-6">
+              <div className="flex items-center gap-3">
+                <Github className="size-5 text-red-300" />
+                <h2 className="text-2xl font-semibold text-white">GitHub Imports</h2>
+              </div>
+              <p className="mt-4 max-w-3xl text-slate-400">
+                GitHub integration lets users move from a real repository list to an editable playground with one selection.
+              </p>
+              <div className="mt-6 grid gap-3 md:grid-cols-2">
+                {githubImportNotes.map((note) => (
+                  <div key={note} className="flex gap-3 rounded-md border border-white/10 bg-black/20 p-4">
+                    <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-300" />
+                    <p className="text-sm leading-6 text-slate-300">{note}</p>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent id="editor-workflow" value="editor" className="rounded-lg border border-white/10 bg-white/[0.03] p-6">
+              <div className="flex items-center gap-3">
+                <Code2 className="size-5 text-red-300" />
+                <h2 className="text-2xl font-semibold text-white">Editor Workflow</h2>
+              </div>
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                {editorCapabilities.map((item) => (
+                  <div key={item.label} className="rounded-md border border-white/10 bg-black/20 p-4">
+                    <p className="text-sm font-medium text-white">{item.label}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">{item.text}</p>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent id="ai-assistant" value="ai" className="rounded-lg border border-white/10 bg-white/[0.03] p-6">
+              <div className="flex items-center gap-3">
+                <Bot className="size-5 text-red-300" />
+                <h2 className="text-2xl font-semibold text-white">AI Assistant</h2>
+              </div>
+              <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_320px]">
+                <div className="rounded-md border border-white/10 bg-black/20 p-5">
+                  <p className="text-sm leading-6 text-slate-300">
+                    The playground includes an AI side panel designed for code discussion, suggestions, and developer
+                    assistance while files are open in the editor.
+                  </p>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    {["Ask about code", "Generate snippets", "Review changes"].map((item) => (
+                      <div key={item} className="rounded-md bg-white/5 px-3 py-2 text-sm text-slate-300">
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-md border border-red-500/20 bg-red-500/8 p-5">
+                  <Sparkles className="mb-3 size-5 text-red-200" />
+                  <p className="font-medium text-red-100">Designed for context</p>
+                  <p className="mt-2 text-sm leading-6 text-red-100/75">
+                    The panel lives inside the playground, so assistance stays close to the active project workflow.
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent id="persistence" value="data" className="rounded-lg border border-white/10 bg-white/[0.03] p-6">
+              <div className="flex items-center gap-3">
+                <Save className="size-5 text-red-300" />
+                <h2 className="text-2xl font-semibold text-white">Persistence</h2>
+              </div>
+              <p className="mt-4 text-slate-400">
+                Playground metadata is stored with Prisma and MongoDB. File trees are persisted as JSON snapshots through
+                the TemplateFile model, so imported repositories and edited templates load back into the same explorer.
+              </p>
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                {[
+                  ["User", "Authentication profile and linked accounts."],
+                  ["Playground", "Project title, template type, owner, and timestamps."],
+                  ["TemplateFile", "Serialized file tree and saved editor content."],
+                ].map(([title, text]) => (
+                  <div key={title} className="rounded-md border border-white/10 bg-black/20 p-4">
+                    <p className="font-medium text-white">{title}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">{text}</p>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <section className="grid gap-6 lg:grid-cols-[1fr_360px]">
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] p-6">
+              <div className="flex items-center gap-3">
+                <Settings2 className="size-5 text-red-300" />
+                <h2 className="text-2xl font-semibold text-white">Tech Stack</h2>
+              </div>
+              <div className="mt-6 flex flex-wrap gap-3">
+                {stackItems.map((item) => (
+                  <Badge key={item} variant="outline" className="border-white/10 bg-white/5 text-slate-300">
+                    {item}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="mt-6 text-center">
-            <p className="text-xs text-gray-600">
-              Built with ❤️ for developers • Secured with <Lock className="h-3 w-3 inline" /> end-to-end encryption
-            </p>
-          </div>
-        </div>
-      </footer>
-    </div>
+
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] p-6">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="size-5 text-emerald-300" />
+                <h2 className="text-2xl font-semibold text-white">Security</h2>
+              </div>
+              <p className="mt-4 text-sm leading-6 text-slate-400">
+                Authentication is handled with NextAuth. GitHub access is scoped through the connected session and used for
+                repository reads during import.
+              </p>
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-red-500/20 bg-red-500/8 p-6">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="flex items-center gap-3">
+                  <Star className="size-5 text-red-200" />
+                  <h2 className="text-2xl font-semibold text-white">Ready to build?</h2>
+                </div>
+                <p className="mt-3 text-red-100/75">
+                  Open the dashboard, create a template playground, or import a GitHub repository into the editor.
+                </p>
+              </div>
+              <Button asChild className="bg-white text-red-600 hover:bg-red-50">
+                <Link href="/dashboard">
+                  Go to Dashboard
+                  <ArrowRight className="ml-2 size-4" />
+                </Link>
+              </Button>
+            </div>
+          </section>
+        </section>
+      </div>
+    </main>
   );
 }

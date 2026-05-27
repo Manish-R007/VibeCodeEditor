@@ -1,7 +1,7 @@
 interface TemplateItem {
-  filename: string;
-  fileExtension: string;
-  content: string;
+  filename?: string;
+  fileExtension?: string;
+  content?: string;
   folderName?: string;
   items?: TemplateItem[];
 }
@@ -21,15 +21,21 @@ interface WebContainerDirectory {
 type WebContainerFileSystem = Record<string, WebContainerFile | WebContainerDirectory>;
 
 export function transformToWebContainerFormat(template: { folderName: string; items: TemplateItem[] }): WebContainerFileSystem {
+  function getItemKey(item: TemplateItem): string {
+    if (item.folderName) return item.folderName;
+
+    return item.fileExtension
+      ? `${item.filename}.${item.fileExtension}`
+      : item.filename || "untitled";
+  }
+
   function processItem(item: TemplateItem): WebContainerFile | WebContainerDirectory {
     if (item.folderName && item.items) {
       // This is a directory
       const directoryContents: WebContainerFileSystem = {};
       
       item.items.forEach(subItem => {
-        const key = subItem.fileExtension 
-          ? `${subItem.filename}.${subItem.fileExtension}`
-          : subItem.folderName!;
+        const key = getItemKey(subItem);
         directoryContents[key] = processItem(subItem);
       });
 
@@ -40,7 +46,7 @@ export function transformToWebContainerFormat(template: { folderName: string; it
       // This is a file
       return {
         file: {
-          contents: item.content
+          contents: item.content || ""
         }
       };
     }
@@ -49,11 +55,9 @@ export function transformToWebContainerFormat(template: { folderName: string; it
   const result: WebContainerFileSystem = {};
   
   template.items.forEach(item => {
-    const key = item.fileExtension 
-      ? `${item.filename}.${item.fileExtension}`
-      : item.folderName!;
+    const key = getItemKey(item);
     result[key] = processItem(item);
   });
 
   return result;
-}1
+}

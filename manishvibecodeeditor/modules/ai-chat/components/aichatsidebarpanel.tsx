@@ -122,7 +122,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
     const [filterType, setFilterType] = useState<string>("all");
     const [autoSave, setAutoSave] = useState(true);
     const [streamResponse, setStreamResponse] = useState(true);
-    const [model, setModel] = useState<string>("llama3.1-8b");
+    const [model, setModel] = useState<string>("gpt-oss-120b");
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -395,12 +395,14 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                                             onChange={(e) => setModel(e.target.value)}
                                             className="bg-zinc-900 border border-zinc-800 rounded-xl px-2 py-1 text-zinc-200 focus:outline-none"
                                         >
+                                            <option className="rounded-xl" value="gpt-oss-120b">gpt-oss-120b</option>
+                                            <option className="rounded-xl" value="zai-glm-4.7">zai-glm-4.7</option>
                                             <option className="rounded-xl" value="llama3.1-8b">llama3.1-8b</option>
-                                            <option  className="rounded-xl" value="llama-3.3-70b">llama-3.3-70b</option>
-                                            <option  className="rounded-xl" value="gpt-oss-120b">gpt-oss-120b</option>
-                                            <option   className="rounded-xl" value="qwen-3-32b">qwen-3-32b</option>
-                                            <option  className="rounded-xl" value="zai-glm-4.6">zai-glm-4.6</option>
-                                            <option  className="rounded-xl" value="qwen-3-235b-a22b-instruct-2507">qwen-3-235b-a22b-instruct-2507</option>
+                                            <option className="rounded-xl" value="llama-3.3-70b">llama-3.3-70b</option>
+                                            <option className="rounded-xl" value="llama-4-scout-17b-16e-instruct">llama-4-scout-17b-16e-instruct</option>
+                                            <option className="rounded-xl" value="qwen-3-32b">qwen-3-32b</option>
+                                            <option className="rounded-xl" value="qwen-3-235b-a22b-instruct-2507">qwen-3-235b-a22b-instruct-2507</option>
+                                            
                                         </select>
                                     </div>
                                     <div className="relative">
