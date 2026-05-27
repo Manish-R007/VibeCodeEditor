@@ -5,10 +5,35 @@ interface ChatMessage {
   content: string;
 }
 
+interface AIMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
 interface ChatRequest {
   message: string;
   history: ChatMessage[];
   model: string;
+}
+
+const DEFAULT_CHAT_MODEL = "gpt-oss-120b";
+
+const supportedChatModels = new Set([
+  "gpt-oss-120b",
+  "zai-glm-4.7",
+  "llama3.1-8b",
+  "llama-3.3-70b",
+  "llama-4-scout-17b-16e-instruct",
+  "qwen-3-32b",
+  "qwen-3-235b-a22b-instruct-2507",
+]);
+
+function normalizeChatModel(model?: string) {
+  if (model && supportedChatModels.has(model)) {
+    return model;
+  }
+
+  return DEFAULT_CHAT_MODEL;
 }
 
 async function generateAiResponse(
@@ -28,14 +53,10 @@ You are a helpful AI assistant for developers. You help with:
 Always provide clear, practical answers. Use proper code formatting when showing examples.
 `;
 
-  const fullMessages = [
+  const fullMessages: AIMessage[] = [
     { role: "system", content: systemPrompt },
     ...messages,
   ];
-
-  const prompt = fullMessages
-    .map((m) => `${m.role}: ${m.content}`)
-    .join("\n\n");
 
   try {
     // Replace with your actual AI API endpoint
@@ -53,20 +74,32 @@ Always provide clear, practical answers. Use proper code formatting when showing
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: model,
+        model,
         messages: fullMessages,
         temperature: 0.7,
-        max_tokens: 2048,
+        max_completion_tokens: 2048,
       }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorText = await response.text();
+      let errorData: unknown = errorText;
+
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        // Keep the raw text when the provider does not return JSON.
+      }
+
       console.error("AI API Error:", errorData);
-      throw new Error(`AI API Error: ${response.statusText}`);
+      throw new Error(`AI API Error (${response.status}): ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as {
+      choices?: Array<{ message?: { content?: string } }>;
+      response?: string;
+      text?: string;
+    };
 
     // Handle different response formats
     const content =
@@ -89,11 +122,12 @@ export async function POST(request: NextRequest) {
   try {
     const body: ChatRequest = await request.json();
     const { message, history, model } = body;
+    const chatModel = normalizeChatModel(model);
 
     // Validate request
-    if (!message || !history || !model) {
+    if (!message || !history) {
       return NextResponse.json(
-        { error: "Invalid request: missing message, history, or model" },
+        { error: "Invalid request: missing message or history" },
         { status: 400 }
       );
     }
@@ -118,11 +152,11 @@ export async function POST(request: NextRequest) {
     ];
 
     // Generate AI response
-    const aiResponse = await generateAiResponse(messages, model);
+    const aiResponse = await generateAiResponse(messages, chatModel);
 
     return NextResponse.json({
       response: aiResponse,
-      model: model,
+      model: chatModel,
       tokens: aiResponse.split(" ").length,
       timestamp: new Date().toISOString(),
     });

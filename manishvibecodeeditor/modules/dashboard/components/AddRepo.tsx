@@ -1,44 +1,96 @@
+'use client'
 
 import { Button } from "@/components/ui/button"
 import { ArrowDown } from "lucide-react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { toast } from "sonner"
+import { createPlaygroundFromGitHubRepo } from "../actions"
+import GitHubRepoModal from "./GitHubRepoModal"
 
+type Repository = {
+  id: number
+  name: string
+  fullName: string
+  url: string
+  description: string | null
+  language: string | null
+  stars: number
+  defaultBranch: string
+}
 
 export const AddRepo = () => {
+  const [isRepoModalOpen, setIsRepoModalOpen] = useState(false)
+  const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null)
+  const [isCreatingPlayground, setIsCreatingPlayground] = useState(false)
+  const router = useRouter()
+
+  const handleRepoSelect = async (repo: Repository) => {
+    try {
+      setSelectedRepo(repo)
+      setIsCreatingPlayground(true)
+      const playground = await createPlaygroundFromGitHubRepo(repo)
+
+      toast.success(`Playground created for ${repo.name}`)
+      setIsRepoModalOpen(false)
+      router.push(`/playground/${playground.id}`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create playground"
+      toast.error(message)
+    } finally {
+      setIsCreatingPlayground(false)
+    }
+  }
+
   return (
-    <div className="w-[500px] h-[180px]"> {/* Add fixed width AND height container with same dimensions */}
-      <div
-        className="h-full group px-6 py-6 flex flex-row justify-between items-center border rounded-lg bg-muted cursor-pointer 
-        transition-all duration-300 ease-in-out
-        hover:bg-background hover:border-[#E93F3F] hover:scale-[1.02]
-        shadow-[0_2px_10px_rgba(0,0,0,0.08)]
-        hover:shadow-[0_10px_30px_rgba(233,63,63,0.15)]"
-      >
-        <div className="flex flex-row justify-center items-start gap-4">
-          <Button
-            variant={"outline"}
-            className="flex justify-center items-center bg-white group-hover:bg-[#fff8f8] group-hover:border-[#E93F3F] group-hover:text-[#E93F3F] transition-colors duration-300"
-            size={"icon"}
-          >
-            <ArrowDown size={30} className="transition-transform duration-300 group-hover:translate-y-1" />
-          </Button>
-          <div className="flex flex-col">
-            <h1 className="text-xl font-bold text-[#e93f3f]">Open Github Repository</h1>
-            <p className="text-sm text-muted-foreground max-w-[220px]">Work with your repositories in our editor</p>
+    <>
+      <div className="w-[500px] h-[180px]">
+        <div
+          onClick={() => setIsRepoModalOpen(true)}
+          className="h-full group px-6 py-6 flex flex-row justify-between items-center border rounded-lg bg-muted cursor-pointer 
+          transition-all duration-300 ease-in-out
+          hover:bg-background hover:border-[#E93F3F] hover:scale-[1.02]
+          shadow-[0_2px_10px_rgba(0,0,0,0.08)]
+          hover:shadow-[0_10px_30px_rgba(233,63,63,0.15)]"
+        >
+          <div className="flex flex-row justify-center items-start gap-4">
+            <Button
+              variant={"outline"}
+              className="flex justify-center items-center bg-white group-hover:bg-[#fff8f8] group-hover:border-[#E93F3F] group-hover:text-[#E93F3F] transition-colors duration-300"
+              size={"icon"}
+              onClick={() => setIsRepoModalOpen(true)}
+            >
+              <ArrowDown size={30} className="transition-transform duration-300 group-hover:translate-y-1" />
+            </Button>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold text-[#e93f3f]">Open Github Repository</h1>
+              <p className="text-sm text-muted-foreground max-w-[220px]">Work with your repositories in our editor</p>
+            </div>
+          </div>
+
+          <div className="relative overflow-hidden">
+            <Image
+              src={"/github.svg"}
+              alt="Open GitHub repository"
+              width={150}
+              height={150}
+              className="transition-transform duration-300 group-hover:scale-110"
+            />
           </div>
         </div>
-
-        <div className="relative overflow-hidden">
-          <Image
-            src={"/github.svg"}
-            alt="Open GitHub repository"
-            width={150}
-            height={150}
-            className="transition-transform duration-300 group-hover:scale-110"
-          />
-        </div>
       </div>
-    </div>
+
+      <GitHubRepoModal
+        isOpen={isRepoModalOpen}
+        onClose={() => setIsRepoModalOpen(false)}
+        onSelect={handleRepoSelect}
+        selectedRepoId={selectedRepo?.id}
+        isSelecting={isCreatingPlayground}
+      />
+
+      
+    </>
   )
 }
 
